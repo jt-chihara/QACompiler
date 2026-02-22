@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["files", "functions"],
+  "properties": {
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "language"],
+        "properties": {
+          "path": { "type": "string" },
+          "language": { "type": "string" }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "file"],
+        "properties": {
+          "name": { "type": "string" },
+          "file": { "type": "string" }
+        }
+      }
+    }
+  }
+}

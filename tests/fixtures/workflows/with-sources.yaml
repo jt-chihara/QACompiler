@@ -1,0 +1,27 @@
+name: sources-workflow
+description: A workflow with sources section
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+sources:
+  include:
+    - "**/*.ts"
+  exclude:
+    - "**/*.test.ts"
+
+llm:
+  provider: openai
+  model: gpt-4o
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      Analyze risks:
+      {{inputs.prd}}
+      {{sources.summary}}
+    output_schema: schemas/risk-analysis.json

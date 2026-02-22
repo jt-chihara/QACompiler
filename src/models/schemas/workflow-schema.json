@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["name", "inputs", "steps"],
+  "properties": {
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string" },
+          "type": { "type": "string", "enum": ["prd", "design-doc", "test-code", "other"] },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "required": ["include"],
+      "properties": {
+        "root": { "type": "string" },
+        "include": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "exclude": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "llm": {
+      "type": "object",
+      "required": ["provider", "model"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "temperature": { "type": "number" },
+        "max_tokens": { "type": "number" }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "type", "output_schema"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": [
+              "risk-analysis",
+              "test-plan",
+              "test-analysis",
+              "test-design",
+              "custom",
+              "shell"
+            ]
+          },
+          "depends_on": { "type": "array", "items": { "type": "string" } },
+          "prompt_template": { "type": "string" },
+          "output_schema": { "type": "string" },
+          "command": { "type": "string" },
+          "timeout_ms": { "type": "number", "minimum": 0 },
+          "llm": {
+            "type": "object",
+            "required": ["provider", "model"],
+            "properties": {
+              "provider": { "type": "string" },
+              "model": { "type": "string" },
+              "temperature": { "type": "number" },
+              "max_tokens": { "type": "number" }
+            }
+          },
+          "retry": {
+            "type": "object",
+            "properties": {
+              "max_attempts": { "type": "number" },
+              "backoff_ms": { "type": "number" }
+            }
+          }
+        },
+        "if": {
+          "properties": { "type": { "const": "shell" } }
+        },
+        "then": {
+          "required": ["command"]
+        },
+        "else": {
+          "required": ["prompt_template"]
+        }
+      }
+    }
+  }
+}

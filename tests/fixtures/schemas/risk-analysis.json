@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["summary", "risks"],
+  "properties": {
+    "summary": { "type": "string" },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "severity"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string" },
+          "severity": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

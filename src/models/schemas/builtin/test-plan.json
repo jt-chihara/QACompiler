@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["objectives", "test_areas"],
+  "properties": {
+    "objectives": {
+      "type": "string",
+      "description": "Overall test plan objectives"
+    },
+    "test_areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["area", "priority", "risk_ids", "approach"],
+        "properties": {
+          "area": { "type": "string", "description": "Test area name" },
+          "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "risk_ids": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Related risk IDs from risk analysis"
+          },
+          "approach": { "type": "string", "description": "Testing approach for this area" }
+        }
+      }
+    }
+  }
+}

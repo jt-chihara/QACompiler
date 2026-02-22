@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["test_suites"],
+  "properties": {
+    "test_suites": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "test_cases"],
+        "properties": {
+          "name": { "type": "string", "description": "Test suite name" },
+          "description": { "type": "string", "description": "Test suite description" },
+          "test_cases": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "title", "steps", "expected_result", "test_layer"],
+              "properties": {
+                "id": { "type": "string", "description": "Test case ID (e.g., TC001)" },
+                "title": { "type": "string" },
+                "preconditions": { "type": "string" },
+                "steps": { "type": "array", "items": { "type": "string" } },
+                "expected_result": { "type": "string" },
+                "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+                "test_layer": {
+                  "type": "string",
+                  "enum": ["unit", "api", "component", "contract", "page-ui", "browser"],
+                  "description": "このテストケースを担保する自動テストのレイヤー。unit: 単一関数・クラスの単体テスト。api: REST/GraphQL等のエンドポイント結合テスト。component: UIコンポーネント単体の描画・操作テスト、ビルド不要でテストランナー上で実行 (Testing Library等)。contract: サービス間のインターフェース契約テスト (Pact等)。page-ui: フロントをビルドしてアプリを起動した状態で、バックエンドをmock化してページ単位でUIインタラクションをテスト (Playwright等)。browser: 実ブラウザ+実バックエンドでのE2Eテスト (Playwright/Cypress等)。"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

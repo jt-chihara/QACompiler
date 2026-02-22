@@ -1,0 +1,31 @@
+name: sources-e2e
+description: E2E test workflow with sources
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+sources:
+  root: source-projects/typescript
+  include:
+    - "**/*.ts"
+
+llm:
+  provider: openai
+  model: gpt-4o
+
+steps:
+  - id: code-review
+    name: Code Review
+    type: risk-analysis
+    prompt_template: |
+      Review the following code:
+      {{sources.summary}}
+
+      File list:
+      {{sources.files}}
+
+      App content:
+      {{sources.file("app.ts")}}
+    output_schema: schemas/risk-analysis.json

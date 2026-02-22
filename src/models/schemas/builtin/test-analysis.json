@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["coverage_assessment", "gaps", "recommendations"],
+  "properties": {
+    "coverage_assessment": {
+      "type": "string",
+      "description": "Overall assessment of test coverage"
+    },
+    "gaps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "severity", "related_risks"],
+        "properties": {
+          "id": { "type": "string", "description": "Gap identifier (e.g., G001)" },
+          "description": { "type": "string", "description": "Description of the testing gap" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "related_risks": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Related risk IDs"
+          }
+        }
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "priority"],
+        "properties": {
+          "description": { "type": "string" },
+          "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

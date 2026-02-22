@@ -1,0 +1,84 @@
+name: qa-standard-workflow
+description: Standard 4-step QA workflow - risk analysis, test plan, test analysis, test design
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+  - path: docs/design-doc.md
+    type: design-doc
+    label: design
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      You are a senior QA engineer. Analyze the following PRD and design document for potential risks.
+      Identify security, performance, reliability, usability, and data integrity risks.
+
+      ## PRD
+      {{inputs.prd}}
+
+      ## Design Document
+      {{inputs.design}}
+
+      Output a structured risk analysis with severity ratings and mitigation strategies.
+    output_schema: builtin:risk-analysis
+
+  - id: test-plan
+    name: Test Plan
+    type: test-plan
+    depends_on:
+      - risk-analysis
+    prompt_template: |
+      You are a senior QA engineer. Based on the identified risks, create a comprehensive test plan.
+      Map each test area to the risks it addresses and define the testing approach.
+
+      ## Identified Risks
+      {{steps.risk-analysis.output}}
+
+      ## PRD
+      {{inputs.prd}}
+
+      Create a prioritized test plan covering all identified risk areas.
+    output_schema: builtin:test-plan
+
+  - id: test-analysis
+    name: Test Analysis
+    type: test-analysis
+    depends_on:
+      - test-plan
+    prompt_template: |
+      You are a senior QA engineer. Analyze the test plan for coverage gaps.
+      Identify areas that need additional testing and provide recommendations.
+
+      ## Test Plan
+      {{steps.test-plan.output}}
+
+      ## Identified Risks
+      {{steps.risk-analysis.output}}
+
+      Assess test coverage and identify gaps with their severity.
+    output_schema: builtin:test-analysis
+
+  - id: test-design
+    name: Test Design
+    type: test-design
+    depends_on:
+      - test-analysis
+    prompt_template: |
+      You are a senior QA engineer. Design detailed test cases based on the test plan and gap analysis.
+      Include preconditions, step-by-step instructions, and expected results.
+
+      ## Test Plan
+      {{steps.test-plan.output}}
+
+      ## Gap Analysis
+      {{steps.test-analysis.output}}
+
+      ## PRD
+      {{inputs.prd}}
+
+      Design comprehensive test suites with detailed test cases.
+    output_schema: builtin:test-design

@@ -1,0 +1,15 @@
+name: shell-step-workflow
+description: A workflow with a shell step for testing
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+steps:
+  - id: static-analysis
+    name: Static Analysis
+    type: shell
+    command: echo '{"files":[{"path":"src/index.ts","language":"typescript"}],"functions":[{"name":"main","file":"src/index.ts"}]}'
+    output_schema: schemas/shell-output.json
+    timeout_ms: 30000

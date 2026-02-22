@@ -1,0 +1,558 @@
+import { describe, expect, it } from "vitest";
+import type { StepOutput } from "../../src/models/step-output.js";
+import { generateReport, type ReportInput } from "../../src/services/report-generator.js";
+
+function makeStepOutput(overrides: Partial<StepOutput> & { step_id: string }): StepOutput {
+  return {
+    status: "completed",
+    output: {},
+    reasoning_log: "",
+    started_at: "2026-02-23T10:00:00Z",
+    completed_at: "2026-02-23T10:01:00Z",
+    model_used: "gpt-4o",
+    input_hash: "abc123",
+    ...overrides,
+  };
+}
+
+describe("generateReport", () => {
+  describe("header and footer", () => {
+    it("should include workflow name as h1", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+        workflowName: "QA Workflow",
+      };
+
+      const report = generateReport(input);
+      expect(report).toMatch(/^# QA Workflow\n/);
+    });
+
+    it("should include workflow description when provided", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+        workflowName: "QA Workflow",
+        workflowDescription: "End-to-end quality assurance pipeline",
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("End-to-end quality assurance pipeline");
+    });
+
+    it("should show completed status when workflow succeeds", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["step-1", "step-2"],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("**Status**: Completed");
+    });
+
+    it("should show failed status with step name when workflow fails", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["step-1"],
+          failed_step: "step-2",
+          status: "failed",
+        },
+        stepOutputs: new Map(),
+        stepNames: new Map([
+          ["step-1", "Risk Analysis"],
+          ["step-2", "Test Plan"],
+        ]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain('**Status**: Failed at step "Test Plan"');
+    });
+
+    it("should show failed status with step id when stepNames not provided", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          failed_step: "step-2",
+          status: "failed",
+        },
+        stepOutputs: new Map(),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain('**Status**: Failed at step "step-2"');
+    });
+
+    it("should show started timestamp", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("**Started**: 2026-02-23T10:00:00Z");
+    });
+
+    it("should show step completion count", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["step-1", "step-2", "step-3"],
+          failed_step: "step-4",
+          status: "failed",
+        },
+        stepOutputs: new Map([
+          ["step-1", makeStepOutput({ step_id: "step-1" })],
+          ["step-2", makeStepOutput({ step_id: "step-2" })],
+          ["step-3", makeStepOutput({ step_id: "step-3" })],
+          ["step-4", makeStepOutput({ step_id: "step-4", status: "failed" })],
+        ]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("**Steps**: 3/4 completed");
+    });
+
+    it("should include footer", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("*Generated by QACompiler*");
+    });
+
+    it("should use fallback name when workflowName is not provided", () => {
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: [],
+          status: "completed",
+        },
+        stepOutputs: new Map(),
+      };
+
+      const report = generateReport(input);
+      expect(report).toMatch(/^# Workflow Report\n/);
+    });
+  });
+
+  describe("custom / unknown type fallback", () => {
+    it("should render unknown output as JSON code block", () => {
+      const output = makeStepOutput({
+        step_id: "custom-step",
+        output: { foo: "bar", count: 42 },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["custom-step"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["custom-step", output]]),
+        stepNames: new Map([["custom-step", "Custom Step"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Custom Step");
+      expect(report).toContain("```json");
+      expect(report).toContain('"foo": "bar"');
+      expect(report).toContain('"count": 42');
+    });
+
+    it("should render step with no output as notice", () => {
+      const output = makeStepOutput({
+        step_id: "empty-step",
+        output: undefined,
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["empty-step"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["empty-step", output]]),
+        stepNames: new Map([["empty-step", "Empty Step"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Empty Step");
+      expect(report).toContain("No output available");
+    });
+  });
+
+  describe("risk-analysis rendering", () => {
+    it("should render summary and risks table", () => {
+      const output = makeStepOutput({
+        step_id: "risk-analysis",
+        output: {
+          summary: "Overall risk assessment of the project.",
+          risks: [
+            {
+              id: "R001",
+              severity: "high",
+              category: "security",
+              description: "SQL injection vulnerability",
+              mitigation: "Use parameterized queries",
+            },
+            {
+              id: "R002",
+              severity: "medium",
+              category: "performance",
+              description: "N+1 query problem",
+              mitigation: "Implement eager loading",
+            },
+          ],
+        },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["risk-analysis"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["risk-analysis", output]]),
+        stepNames: new Map([["risk-analysis", "Risk Analysis"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Risk Analysis");
+      expect(report).toContain("Overall risk assessment of the project.");
+      expect(report).toContain("| ID | Severity | Category | Description | Mitigation |");
+      expect(report).toContain(
+        "| R001 | high | security | SQL injection vulnerability | Use parameterized queries |",
+      );
+      expect(report).toContain(
+        "| R002 | medium | performance | N+1 query problem | Implement eager loading |",
+      );
+    });
+
+    it("should render risk-analysis with empty risks array", () => {
+      const output = makeStepOutput({
+        step_id: "risk-analysis",
+        output: {
+          summary: "No risks identified.",
+          risks: [],
+        },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["risk-analysis"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["risk-analysis", output]]),
+        stepNames: new Map([["risk-analysis", "Risk Analysis"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("No risks identified.");
+      expect(report).not.toContain("| ID |");
+    });
+  });
+
+  describe("test-plan rendering", () => {
+    it("should render objectives and test areas", () => {
+      const output = makeStepOutput({
+        step_id: "test-plan",
+        output: {
+          objectives: "Validate all critical user flows.",
+          test_areas: [
+            {
+              name: "Authentication",
+              description: "Test login, logout, and session management",
+              priority: "high",
+            },
+            {
+              name: "Data Validation",
+              description: "Test input validation rules",
+              priority: "medium",
+            },
+          ],
+        },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["test-plan"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["test-plan", output]]),
+        stepNames: new Map([["test-plan", "Test Plan"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Test Plan");
+      expect(report).toContain("Validate all critical user flows.");
+      expect(report).toContain("### Authentication");
+      expect(report).toContain("Test login, logout, and session management");
+      expect(report).toContain("**Priority**: high");
+      expect(report).toContain("### Data Validation");
+      expect(report).toContain("**Priority**: medium");
+    });
+  });
+
+  describe("test-analysis rendering", () => {
+    it("should render coverage assessment, gaps table, and recommendations table", () => {
+      const output = makeStepOutput({
+        step_id: "test-analysis",
+        output: {
+          coverage_assessment: "Current test coverage is at 65%.",
+          gaps: [
+            {
+              area: "Error handling",
+              description: "No tests for network timeout scenarios",
+              severity: "high",
+            },
+          ],
+          recommendations: [
+            {
+              title: "Add timeout tests",
+              description: "Create tests for network timeout scenarios",
+              priority: "high",
+            },
+          ],
+        },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["test-analysis"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["test-analysis", output]]),
+        stepNames: new Map([["test-analysis", "Test Analysis"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Test Analysis");
+      expect(report).toContain("Current test coverage is at 65%.");
+      expect(report).toContain("### Gaps");
+      expect(report).toContain("| Area | Description | Severity |");
+      expect(report).toContain(
+        "| Error handling | No tests for network timeout scenarios | high |",
+      );
+      expect(report).toContain("### Recommendations");
+      expect(report).toContain("| Title | Description | Priority |");
+      expect(report).toContain(
+        "| Add timeout tests | Create tests for network timeout scenarios | high |",
+      );
+    });
+  });
+
+  describe("test-design rendering", () => {
+    it("should render test suites with nested test cases", () => {
+      const output = makeStepOutput({
+        step_id: "test-design",
+        output: {
+          test_suites: [
+            {
+              name: "Login Suite",
+              test_cases: [
+                {
+                  name: "Valid login",
+                  preconditions: "User exists in database",
+                  steps: ["Navigate to login page", "Enter credentials", "Click submit"],
+                  expected_result: "User is redirected to dashboard",
+                },
+                {
+                  name: "Invalid password",
+                  preconditions: "User exists in database",
+                  steps: ["Navigate to login page", "Enter wrong password", "Click submit"],
+                  expected_result: "Error message is displayed",
+                },
+              ],
+            },
+          ],
+        },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["test-design"],
+          status: "completed",
+        },
+        stepOutputs: new Map([["test-design", output]]),
+        stepNames: new Map([["test-design", "Test Design"]]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain("## Test Design");
+      expect(report).toContain("### Login Suite");
+      expect(report).toContain("#### Valid login");
+      expect(report).toContain("**Preconditions**: User exists in database");
+      expect(report).toContain("1. Navigate to login page");
+      expect(report).toContain("2. Enter credentials");
+      expect(report).toContain("3. Click submit");
+      expect(report).toContain("**Expected Result**: User is redirected to dashboard");
+      expect(report).toContain("#### Invalid password");
+    });
+  });
+
+  describe("multiple steps", () => {
+    it("should render all steps separated by horizontal rules", () => {
+      const riskOutput = makeStepOutput({
+        step_id: "risk-analysis",
+        output: {
+          summary: "Risk summary.",
+          risks: [],
+        },
+      });
+
+      const customOutput = makeStepOutput({
+        step_id: "custom-step",
+        output: { data: "value" },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["risk-analysis", "custom-step"],
+          status: "completed",
+        },
+        stepOutputs: new Map([
+          ["risk-analysis", riskOutput],
+          ["custom-step", customOutput],
+        ]),
+        stepNames: new Map([
+          ["risk-analysis", "Risk Analysis"],
+          ["custom-step", "Custom Step"],
+        ]),
+      };
+
+      const report = generateReport(input);
+      const riskIdx = report.indexOf("## Risk Analysis");
+      const customIdx = report.indexOf("## Custom Step");
+      expect(riskIdx).toBeLessThan(customIdx);
+
+      // Sections should be separated by ---
+      const betweenSections = report.slice(riskIdx, customIdx);
+      expect(betweenSections).toContain("---");
+    });
+  });
+
+  describe("partial report on failure", () => {
+    it("should include completed steps and failed step in report", () => {
+      const completedOutput = makeStepOutput({
+        step_id: "step-1",
+        output: { result: "ok" },
+      });
+
+      const failedOutput = makeStepOutput({
+        step_id: "step-2",
+        status: "failed",
+        error: { message: "LLM timeout" },
+        output: undefined,
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["step-1"],
+          failed_step: "step-2",
+          status: "failed",
+        },
+        stepOutputs: new Map([
+          ["step-1", completedOutput],
+          ["step-2", failedOutput],
+        ]),
+        stepNames: new Map([
+          ["step-1", "Step One"],
+          ["step-2", "Step Two"],
+        ]),
+      };
+
+      const report = generateReport(input);
+      expect(report).toContain('**Status**: Failed at step "Step Two"');
+      expect(report).toContain("## Step One");
+      expect(report).toContain("## Step Two");
+      expect(report).toContain("LLM timeout");
+    });
+  });
+
+  describe("step ordering", () => {
+    it("should render steps in the order of completed_steps then failed_step", () => {
+      const output1 = makeStepOutput({ step_id: "b", output: { x: 1 } });
+      const output2 = makeStepOutput({ step_id: "a", output: { x: 2 } });
+      const output3 = makeStepOutput({
+        step_id: "c",
+        status: "failed",
+        error: { message: "fail" },
+      });
+
+      const input: ReportInput = {
+        executionState: {
+          workflow_path: "/path/to/workflow.yaml",
+          started_at: "2026-02-23T10:00:00Z",
+          completed_steps: ["b", "a"],
+          failed_step: "c",
+          status: "failed",
+        },
+        stepOutputs: new Map([
+          ["b", output1],
+          ["a", output2],
+          ["c", output3],
+        ]),
+        stepNames: new Map([
+          ["b", "Step B"],
+          ["a", "Step A"],
+          ["c", "Step C"],
+        ]),
+      };
+
+      const report = generateReport(input);
+      const idxB = report.indexOf("## Step B");
+      const idxA = report.indexOf("## Step A");
+      const idxC = report.indexOf("## Step C");
+      expect(idxB).toBeLessThan(idxA);
+      expect(idxA).toBeLessThan(idxC);
+    });
+  });
+});

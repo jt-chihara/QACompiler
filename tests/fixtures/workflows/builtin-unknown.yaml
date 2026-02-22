@@ -1,0 +1,21 @@
+name: builtin-unknown-workflow
+description: Workflow using unknown builtin schema
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      Analyze the following PRD for risks:
+      {{inputs.prd}}
+    output_schema: builtin:unknown

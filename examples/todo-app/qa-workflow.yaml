@@ -1,0 +1,109 @@
+name: todo-app-qa-workflow
+description: TODOアプリの「期限・優先度」新機能に対するQAワークフロー
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+  - path: docs/design-doc.md
+    type: design-doc
+    label: design
+
+sources:
+  include:
+    - "backend/**/*.go"
+    - "frontend/src/**/*.{ts,tsx}"
+  exclude:
+    - "**/*_test.go"
+    - "**/*.test.ts"
+
+steps:
+  - id: risk-analysis
+    name: リスク分析
+    type: risk-analysis
+    prompt_template: |
+      あなたはシニアQAエンジニアです。
+      TODOアプリに「期限・優先度」機能を追加するにあたり、PRDとDesign Docを分析してリスクを特定してください。
+      既存のソースコードも参照し、変更による影響範囲を考慮してください。
+
+      ## PRD
+      {{inputs.prd}}
+
+      ## Design Doc
+      {{inputs.design}}
+
+      ## ソースコード構造
+      {{sources.summary}}
+
+      セキュリティ、パフォーマンス、信頼性、ユーザビリティ、データ整合性の観点からリスクを洗い出してください。
+    output_schema: builtin:risk-analysis
+
+  - id: test-plan
+    name: テスト計画
+    type: test-plan
+    depends_on:
+      - risk-analysis
+    prompt_template: |
+      あなたはシニアQAエンジニアです。
+      リスク分析の結果に基づいて、テスト計画を作成してください。
+      各テスト領域をリスクに紐づけ、テストアプローチを定義してください。
+
+      ## リスク分析結果
+      {{steps.risk-analysis.output}}
+
+      ## PRD
+      {{inputs.prd}}
+
+      ## Design Doc
+      {{inputs.design}}
+
+      全リスク領域をカバーする優先度付きテスト計画を作成してください。
+    output_schema: builtin:test-plan
+
+  - id: test-analysis
+    name: テスト分析
+    type: test-analysis
+    depends_on:
+      - test-plan
+    prompt_template: |
+      あなたはシニアQAエンジニアです。
+      テスト計画を分析してください。
+      追加テストが必要な領域を特定し、推奨事項を提示してください。
+
+      ## テスト計画
+      {{steps.test-plan.output}}
+
+      ## リスク分析結果
+      {{steps.risk-analysis.output}}
+
+      ## ソースコード構造
+      {{sources.summary}}
+
+      テストカバレッジを評価し、ギャップとその深刻度を特定してください。
+    output_schema: builtin:test-analysis
+
+  - id: test-design
+    name: テスト設計
+    type: test-design
+    depends_on:
+      - test-analysis
+    prompt_template: |
+      あなたはシニアQAエンジニアです。
+      テスト計画と分析に基づいて、詳細なテストケースを設計してください。
+      前提条件、手順、期待結果を含めてください。
+      test_layerは必ず以下のいずれかを使用してください: unit, api, component, contract, page-ui, browser
+
+      ## テスト計画
+      {{steps.test-plan.output}}
+
+      ## ギャップ分析
+      {{steps.test-analysis.output}}
+
+      ## PRD
+      {{inputs.prd}}
+
+      ## Design Doc
+      {{inputs.design}}
+
+      詳細なテストケースを含むテストスイートを設計してください。
+    output_schema: builtin:test-design

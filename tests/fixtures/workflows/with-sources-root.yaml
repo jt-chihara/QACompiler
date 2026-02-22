@@ -1,0 +1,25 @@
+name: sources-root-workflow
+description: A workflow with sources.root specified
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+sources:
+  root: "./source-projects/typescript"
+  include:
+    - "**/*.ts"
+
+llm:
+  provider: openai
+  model: gpt-4o
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      Analyze risks:
+      {{inputs.prd}}
+    output_schema: schemas/risk-analysis.json

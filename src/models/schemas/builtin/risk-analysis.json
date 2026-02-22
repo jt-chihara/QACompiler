@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["summary", "risks"],
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Overall risk assessment summary"
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "severity", "category", "mitigation"],
+        "properties": {
+          "id": { "type": "string", "description": "Unique risk identifier (e.g., R001)" },
+          "description": { "type": "string", "description": "Detailed risk description" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "category": {
+            "type": "string",
+            "enum": [
+              "security",
+              "performance",
+              "reliability",
+              "usability",
+              "data-integrity",
+              "other"
+            ]
+          },
+          "mitigation": { "type": "string", "description": "Suggested mitigation strategy" }
+        }
+      }
+    }
+  }
+}

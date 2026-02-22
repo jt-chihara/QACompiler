@@ -1,0 +1,23 @@
+name: sources-no-include-workflow
+description: A workflow with sources but no include
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+sources:
+  exclude:
+    - "**/*.test.ts"
+
+llm:
+  provider: openai
+  model: gpt-4o
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      {{inputs.prd}}
+    output_schema: schemas/risk-analysis.json

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": ["objectives", "test_areas"],
+  "properties": {
+    "objectives": { "type": "string" },
+    "test_areas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["area", "priority"],
+        "properties": {
+          "area": { "type": "string" },
+          "priority": { "type": "string", "enum": ["high", "medium", "low"] }
+        }
+      }
+    }
+  }
+}

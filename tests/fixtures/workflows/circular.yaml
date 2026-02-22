@@ -1,0 +1,37 @@
+name: circular-workflow
+description: Invalid workflow with circular dependency
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0
+
+steps:
+  - id: step-a
+    name: Step A
+    type: custom
+    depends_on:
+      - step-c
+    prompt_template: "Analyze"
+    output_schema: schemas/risk-analysis.json
+
+  - id: step-b
+    name: Step B
+    type: custom
+    depends_on:
+      - step-a
+    prompt_template: "Analyze"
+    output_schema: schemas/risk-analysis.json
+
+  - id: step-c
+    name: Step C
+    type: custom
+    depends_on:
+      - step-b
+    prompt_template: "Analyze"
+    output_schema: schemas/risk-analysis.json

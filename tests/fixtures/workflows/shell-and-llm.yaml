@@ -1,0 +1,30 @@
+name: shell-and-llm-workflow
+description: A workflow combining shell and LLM steps
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+llm:
+  provider: openai
+  model: gpt-4o
+  temperature: 0
+
+steps:
+  - id: static-analysis
+    name: Static Analysis
+    type: shell
+    command: echo '{"files":[{"path":"src/index.ts","language":"typescript"}],"functions":[{"name":"main","file":"src/index.ts"}]}'
+    output_schema: schemas/shell-output.json
+    timeout_ms: 30000
+
+  - id: risk-analysis
+    name: Risk Analysis
+    type: custom
+    depends_on:
+      - static-analysis
+    prompt_template: |
+      Analyze the following code structure for risks:
+      {{steps.static-analysis.output}}
+    output_schema: schemas/risk-analysis.json

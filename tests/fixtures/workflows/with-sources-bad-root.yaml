@@ -1,0 +1,24 @@
+name: sources-bad-root-workflow
+description: A workflow with non-existent sources.root
+
+inputs:
+  - path: docs/prd.md
+    type: prd
+    label: prd
+
+sources:
+  root: "./nonexistent-dir"
+  include:
+    - "**/*.ts"
+
+llm:
+  provider: openai
+  model: gpt-4o
+
+steps:
+  - id: risk-analysis
+    name: Risk Analysis
+    type: risk-analysis
+    prompt_template: |
+      {{inputs.prd}}
+    output_schema: schemas/risk-analysis.json
