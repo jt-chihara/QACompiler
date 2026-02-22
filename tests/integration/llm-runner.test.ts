@@ -14,7 +14,7 @@ describe("LLMRunner", () => {
         usage: { totalTokens: 500 },
       });
 
-      const llmConfig: LLMConfig = { provider: "openai", model: "gpt-4o" };
+      const llmConfig: LLMConfig = { provider: "claude-code", model: "claude-sonnet-4-6" };
       const runner = new LLMRunner({
         generateObjectFn: mockGenerateObject,
       });
@@ -45,7 +45,7 @@ describe("LLMRunner", () => {
       });
 
       const stepLlmConfig: LLMConfig = {
-        provider: "anthropic",
+        provider: "claude-code",
         model: "claude-sonnet-4-20250514",
         temperature: 0.5,
       };
@@ -86,7 +86,7 @@ describe("LLMRunner", () => {
       const result = await runner.runStep({
         resolvedPrompt: "Test prompt",
         outputSchemaPath: join(schemasDir, "risk-analysis.json"),
-        llmConfig: { provider: "openai", model: "gpt-4o" },
+        llmConfig: { provider: "claude-code", model: "claude-sonnet-4-6" },
         retry: { max_attempts: 3, backoff_ms: 0 },
       });
 
@@ -105,7 +105,7 @@ describe("LLMRunner", () => {
         runner.runStep({
           resolvedPrompt: "Test prompt",
           outputSchemaPath: join(schemasDir, "risk-analysis.json"),
-          llmConfig: { provider: "openai", model: "gpt-4o" },
+          llmConfig: { provider: "claude-code", model: "claude-sonnet-4-6" },
           retry: { max_attempts: 2, backoff_ms: 0 },
         }),
       ).rejects.toThrow(/LLM error/);
@@ -124,7 +124,7 @@ describe("LLMRunner", () => {
         runner.runStep({
           resolvedPrompt: "Test prompt",
           outputSchemaPath: join(schemasDir, "risk-analysis.json"),
-          llmConfig: { provider: "openai", model: "gpt-4o" },
+          llmConfig: { provider: "claude-code", model: "claude-sonnet-4-6" },
           retry: { backoff_ms: 0 },
         }),
       ).rejects.toThrow(/LLM error/);

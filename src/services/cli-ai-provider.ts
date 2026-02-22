@@ -65,11 +65,7 @@ Output ONLY the JSON object, no other text, no markdown code blocks.`;
 }
 
 /**
- * Create a GenerateObjectFn that calls a CLI tool (claude or codex) as subprocess.
- *
- * Supported providers:
- * - "claude-code": calls `claude -p <prompt> --output-format json`
- * - "codex": calls `codex -q <prompt>`
+ * Create a GenerateObjectFn that calls the claude CLI as subprocess.
  */
 export function createCLIGenerateObjectFn(options?: CLIProviderOptions): GenerateObjectFn {
   const exec = options?.execFn ?? defaultExec;
@@ -77,14 +73,7 @@ export function createCLIGenerateObjectFn(options?: CLIProviderOptions): Generat
 
   return async (args): Promise<GenerateObjectResult> => {
     const fullPrompt = buildPromptWithSchema(args.prompt, args.schema);
-
-    if (args.provider === "claude-code") {
-      return runClaudeCode(exec, fullPrompt, timeout, args.model);
-    } else if (args.provider === "codex") {
-      return runCodex(exec, fullPrompt, timeout);
-    }
-
-    throw new Error(`Unsupported CLI provider: "${args.provider}". Use "claude-code" or "codex".`);
+    return runClaudeCode(exec, fullPrompt, timeout, args.model);
   };
 }
 
@@ -123,17 +112,6 @@ async function runClaudeCode(
 
   const object = extractJSON(resultText);
   return { object, reasoning: reasoning || undefined };
-}
-
-async function runCodex(
-  exec: ExecFn,
-  prompt: string,
-  _timeout: number,
-): Promise<GenerateObjectResult> {
-  const { stdout } = await exec("codex", ["-q", prompt]);
-
-  const object = extractJSON(stdout);
-  return { object };
 }
 
 const defaultExec: ExecFn = async (cmd, args) => {

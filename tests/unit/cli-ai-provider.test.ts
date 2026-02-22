@@ -28,7 +28,7 @@ describe("extractJSON", () => {
 });
 
 describe("createCLIGenerateObjectFn", () => {
-  it("should call claude CLI and parse output for claude-code provider", async () => {
+  it("should call claude CLI and parse output", async () => {
     const mockExec = vi.fn().mockResolvedValue({
       stdout: JSON.stringify({
         type: "result",
@@ -42,7 +42,6 @@ describe("createCLIGenerateObjectFn", () => {
       prompt: "Analyze risks",
       schema: { type: "object" },
       model: "claude-sonnet-4-20250514",
-      provider: "claude-code",
     });
 
     expect(result.object).toEqual({ summary: "risk found", risks: [] });
@@ -58,27 +57,6 @@ describe("createCLIGenerateObjectFn", () => {
     expect(args).not.toContain("--max-turns");
     // Prompt is passed as CLI arg after -p
     expect(args[args.indexOf("-p") + 1]).toContain("Analyze risks");
-  });
-
-  it("should call codex CLI for codex provider", async () => {
-    const mockExec = vi.fn().mockResolvedValue({
-      stdout: '{"summary": "codex result", "risks": []}',
-    });
-
-    const generateObject = createCLIGenerateObjectFn({ execFn: mockExec });
-
-    const result = await generateObject({
-      prompt: "Analyze risks",
-      schema: { type: "object" },
-      model: "o3-mini",
-      provider: "codex",
-    });
-
-    expect(result.object).toEqual({ summary: "codex result", risks: [] });
-    expect(mockExec).toHaveBeenCalledOnce();
-
-    const [cmd] = mockExec.mock.calls[0];
-    expect(cmd).toBe("codex");
   });
 
   it("should include schema in the prompt sent to CLI", async () => {
@@ -99,7 +77,6 @@ describe("createCLIGenerateObjectFn", () => {
       prompt: "Analyze risks",
       schema: { type: "object", required: ["summary"] },
       model: "claude-sonnet-4-20250514",
-      provider: "claude-code",
     });
 
     // The prompt arg should contain the schema
@@ -122,7 +99,6 @@ describe("createCLIGenerateObjectFn", () => {
       prompt: "Analyze risks",
       schema: { type: "object" },
       model: "default",
-      provider: "claude-code",
     });
 
     const [, args] = mockExec.mock.calls[0];
@@ -139,7 +115,6 @@ describe("createCLIGenerateObjectFn", () => {
         prompt: "Analyze risks",
         schema: { type: "object" },
         model: "claude-sonnet-4-20250514",
-        provider: "claude-code",
       }),
     ).rejects.toThrow(/command not found/);
   });
@@ -159,7 +134,6 @@ describe("createCLIGenerateObjectFn", () => {
       prompt: "Analyze risks",
       schema: { type: "object" },
       model: "claude-sonnet-4-20250514",
-      provider: "claude-code",
     });
 
     expect(result.object).toEqual({ summary: "risk found", risks: [] });

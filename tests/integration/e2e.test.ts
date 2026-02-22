@@ -2,6 +2,7 @@ import { mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import type { LLMConfig } from "../../src/models/workflow.js";
 import { DAGExecutor } from "../../src/services/dag-executor.js";
 import type { GenerateObjectFn } from "../../src/services/llm-runner.js";
 import { createLLMStepExecutor } from "../../src/services/llm-step-executor.js";
@@ -10,6 +11,11 @@ import { loadWorkflow } from "../../src/services/workflow-loader.js";
 
 const fixturesDir = join(import.meta.dirname, "../fixtures");
 const workflowsDir = join(fixturesDir, "workflows");
+
+const defaultLlmConfig: LLMConfig = {
+  provider: "claude-code",
+  model: "claude-sonnet-4-6",
+};
 
 function createTempDir(): string {
   const dir = join(tmpdir(), `e2e-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -50,7 +56,7 @@ describe("E2E: Workflow Execution", () => {
 
     const stepExecutor = createLLMStepExecutor({
       generateObjectFn: mockGenerateObject,
-      defaultLlmConfig: workflow.llm!,
+      defaultLlmConfig: workflow.llm ?? defaultLlmConfig,
       baseDir: fixturesDir,
     });
 
@@ -75,7 +81,7 @@ describe("E2E: Workflow Execution", () => {
     expect(riskOutput).toBeDefined();
     expect(riskOutput?.status).toBe("completed");
     expect(riskOutput?.output?.summary).toBe("Found 2 risks in authentication feature");
-    expect(riskOutput?.model_used).toBe("gpt-4o");
+    expect(riskOutput?.model_used).toBe("claude-sonnet-4-6");
     expect(riskOutput?.input_hash).toMatch(/^[0-9a-f]{64}$/);
     expect(riskOutput?.reasoning_log).toContain("Identified risks");
 
@@ -107,7 +113,7 @@ describe("E2E: Workflow Execution", () => {
 
     const stepExecutor = createLLMStepExecutor({
       generateObjectFn: mockGenerateObject,
-      defaultLlmConfig: workflow.llm!,
+      defaultLlmConfig: workflow.llm ?? defaultLlmConfig,
       baseDir: fixturesDir,
     });
 
@@ -144,7 +150,7 @@ describe("E2E: Workflow Execution", () => {
 
     const stepExecutor = createLLMStepExecutor({
       generateObjectFn: mockGenerateObject,
-      defaultLlmConfig: workflow.llm!,
+      defaultLlmConfig: workflow.llm ?? defaultLlmConfig,
       baseDir: fixturesDir,
     });
 
@@ -184,7 +190,7 @@ describe("E2E: Workflow Execution", () => {
 
     const stepExecutor = createLLMStepExecutor({
       generateObjectFn: mockGenerateObject,
-      defaultLlmConfig: workflow.llm!,
+      defaultLlmConfig: workflow.llm ?? defaultLlmConfig,
       baseDir: fixturesDir,
     });
 
@@ -230,7 +236,7 @@ describe("E2E: Workflow Execution", () => {
       reasoning_log: "Previous reasoning",
       started_at: "2026-02-22T09:00:00Z",
       completed_at: "2026-02-22T09:00:10Z",
-      model_used: "gpt-4o",
+      model_used: "claude-sonnet-4-6",
       input_hash: "previous-hash",
     });
     outputManager.saveExecutionState({
@@ -251,7 +257,7 @@ describe("E2E: Workflow Execution", () => {
 
     const stepExecutor = createLLMStepExecutor({
       generateObjectFn: mockGenerateObject,
-      defaultLlmConfig: workflow.llm!,
+      defaultLlmConfig: workflow.llm ?? defaultLlmConfig,
       baseDir: fixturesDir,
     });
 

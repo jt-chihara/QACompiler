@@ -6,11 +6,6 @@ inputs:
     type: prd
     label: prd
 
-llm:
-  provider: openai
-  model: gpt-4o
-  temperature: 0
-
 steps:
   - id: step-a
     name: Step A

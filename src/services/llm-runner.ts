@@ -11,7 +11,6 @@ export type GenerateObjectFn = (args: {
   prompt: string;
   schema: Record<string, unknown>;
   model: string;
-  provider: string;
   temperature?: number;
   maxTokens?: number;
 }) => Promise<GenerateObjectResult>;
@@ -52,7 +51,6 @@ export class LLMRunner {
           prompt: input.resolvedPrompt,
           schema,
           model: input.llmConfig.model,
-          provider: input.llmConfig.provider,
           temperature: input.llmConfig.temperature,
           maxTokens: input.llmConfig.max_tokens,
         });

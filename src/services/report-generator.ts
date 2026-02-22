@@ -126,8 +126,8 @@ function renderTestPlan(output: Record<string, unknown>): string {
   if (areas) {
     for (const area of areas) {
       lines.push("");
-      lines.push(`### ${area.name}`);
-      lines.push(area.description);
+      lines.push(`### ${area.area}`);
+      lines.push(area.approach);
       if (area.priority) {
         lines.push(`**Priority**: ${area.priority}`);
       }
@@ -145,10 +145,10 @@ function renderTestAnalysis(output: Record<string, unknown>): string {
   if (gaps && gaps.length > 0) {
     lines.push("");
     lines.push("### Gaps");
-    lines.push("| Area | Description | Severity |");
+    lines.push("| ID | Description | Severity |");
     lines.push("| --- | --- | --- |");
     for (const gap of gaps) {
-      lines.push(`| ${gap.area} | ${gap.description} | ${gap.severity} |`);
+      lines.push(`| ${gap.id} | ${gap.description} | ${gap.severity} |`);
     }
   }
 
@@ -156,10 +156,10 @@ function renderTestAnalysis(output: Record<string, unknown>): string {
   if (recommendations && recommendations.length > 0) {
     lines.push("");
     lines.push("### Recommendations");
-    lines.push("| Title | Description | Priority |");
-    lines.push("| --- | --- | --- |");
+    lines.push("| Description | Priority |");
+    lines.push("| --- | --- |");
     for (const rec of recommendations) {
-      lines.push(`| ${rec.title} | ${rec.description} | ${rec.priority} |`);
+      lines.push(`| ${rec.description} | ${rec.priority} |`);
     }
   }
 
@@ -178,7 +178,7 @@ function renderTestDesign(output: Record<string, unknown>): string {
       if (cases) {
         for (const tc of cases) {
           lines.push("");
-          lines.push(`#### ${tc.name}`);
+          lines.push(`#### ${tc.title}`);
           if (tc.preconditions) {
             lines.push(`**Preconditions**: ${tc.preconditions}`);
           }

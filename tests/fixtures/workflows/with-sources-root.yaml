@@ -11,10 +11,6 @@ sources:
   include:
     - "**/*.ts"
 
-llm:
-  provider: openai
-  model: gpt-4o
-
 steps:
   - id: risk-analysis
     name: Risk Analysis

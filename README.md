@@ -1,33 +1,10 @@
 # QA Compiler
 
-PRD・Design Doc・テストコードを入力として、AIがリスク分析 → テスト計画 → テスト分析 → テスト設計を自動実行するCLIツール。
-
-## 設計思想
-
-- **QA as Code** - YAMLでワークフローを定義し、 Directed Acyclic Graph(DAG)として実行。差分検知可能で再現性がある
-- **AI as 制約付き実行エンジン** - JSON Schemaで出力を制約し、reasoningログで思考過程を記録
-- **Local-first** - CLI完結、ローカルのClaude Code / Codexで実行可能
-
-## 必要環境
-
-- Node.js 22 LTS以上
-- pnpm
-- 以下のいずれか:
-  - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`claude` コマンド)
-  - [Codex CLI](https://github.com/openai/codex) (`codex` コマンド)
-  - OpenAI APIキー (`OPENAI_API_KEY`) -- 従量課金
-  - Anthropic APIキー (`ANTHROPIC_API_KEY`) -- 従量課金
-
-## インストール
-
-```bash
-pnpm install
-pnpm run build
-```
+PRD・Design Doc・テストコードを入力として、AIがリスク分析 → テスト計画 → テスト分析 → テスト設計を自動実行するCLIツール
 
 ## 使い方
 
-QA Compilerは、あなたのプロダクトの**PRD・Design Doc・テストコード**を読み取り、AIでQAプロセスを実行します。プロダクトのリポジトリ内でも、QA専用ディレクトリでも動作します。
+QA Compilerは、あなたのプロダクトの**PRD・Design Doc・テストコード**を読み取り、AIでQAプロセスを実行します。プロダクトのリポジトリ内でも、QA専用ディレクトリでも動作します
 
 ### 1. QAワークフローを準備する
 
@@ -64,11 +41,6 @@ inputs:
     type: design-doc
     label: design                # {{inputs.design}} として参照
 
-# --- AIプロバイダー設定 ---
-llm:
-  provider: claude-code          # claude-code / codex / openai / anthropic
-  model: claude-sonnet-4-20250514
-
 # --- ステップ: AIの実行順序を定義（DAGとして依存関係を解決） ---
 steps:
   - id: risk-analysis
@@ -98,20 +70,9 @@ steps:
 - `{{inputs.ラベル名}}` - 入力ドキュメントの内容を展開
 - `{{steps.ステップID.output}}` - 先行ステップの出力を展開
 
-### 3. AIプロバイダーを設定する
+### 3. バリデーション（任意）
 
-ワークフローYAMLの `llm.provider` に応じて設定します:
-
-| プロバイダー | `provider` | 必要な設定 | 課金 |
-|-------------|-----------|-----------|------|
-| Claude Code | `claude-code` | `claude` コマンドが使えること | サブスク内 |
-| Codex CLI | `codex` | `codex` コマンドが使えること | サブスク内 |
-| OpenAI API | `openai` | `export OPENAI_API_KEY=sk-...` | 従量課金 |
-| Anthropic API | `anthropic` | `export ANTHROPIC_API_KEY=sk-ant-...` | 従量課金 |
-
-### 4. バリデーション（任意）
-
-ワークフロー定義の構文・整合性を検証します（AIは実行しない）:
+ワークフロー定義の構文を検証します:
 
 ```bash
 qa-compiler validate qa-workflow.yaml
@@ -123,19 +84,15 @@ qa-compiler validate qa-workflow.yaml
 
 ```bash
 qa-compiler run qa-workflow.yaml
+```
+
+// 出力例
+```
 [1/4] リスク分析 ... done (85.1s)
 [2/4] テスト計画 ... done (77.8s)
 [3/4] テスト分析 ... done (81.9s)
 [4/4] テスト設計 ... done (231.9s)
 All steps completed successfully. (4/4)
-```
-
-```
-[1/2] Risk Analysis ... done (12.3s)
-[2/2] Test Plan ... done (8.7s)
-
-All steps completed successfully. (2/2)
-Output: .output/
 ```
 
 ### 6. 出力を確認する
@@ -252,21 +209,6 @@ steps:
 
 ### ステップ固有のLLM設定
 
-ステップごとに異なるモデルを使う場合:
-
-```yaml
-steps:
-  - id: risk-analysis
-    name: Risk Analysis
-    type: risk-analysis
-    llm:
-      provider: anthropic
-      model: claude-sonnet-4-20250514
-      temperature: 0
-    prompt_template: ...
-    output_schema: schemas/risk-analysis.json
-```
-
 ### リトライ設定
 
 ```yaml
@@ -282,6 +224,10 @@ steps:
 ```
 
 ## 開発
+
+- Node.js 22 LTS以上
+- pnpm
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (`claude` コマンド)
 
 ```bash
 pnpm install

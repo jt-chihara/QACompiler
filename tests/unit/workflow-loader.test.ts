@@ -43,11 +43,9 @@ describe("loadWorkflow", () => {
     ).toThrow(/schema.*not found|does not exist/i);
   });
 
-  it("should resolve LLM config from workflow level", () => {
+  it("should have llm undefined when not specified in workflow", () => {
     const workflow = loadWorkflow(join(workflowsDir, "single-step.yaml"), fixturesDir);
-    expect(workflow.llm).toBeDefined();
-    expect(workflow.llm?.provider).toBe("openai");
-    expect(workflow.llm?.model).toBe("gpt-4o");
+    expect(workflow.llm).toBeUndefined();
   });
 
   it("should parse step prompt_template correctly", () => {

@@ -298,13 +298,13 @@ describe("generateReport", () => {
           objectives: "Validate all critical user flows.",
           test_areas: [
             {
-              name: "Authentication",
-              description: "Test login, logout, and session management",
+              area: "Authentication",
+              approach: "Test login, logout, and session management",
               priority: "high",
             },
             {
-              name: "Data Validation",
-              description: "Test input validation rules",
+              area: "Data Validation",
+              approach: "Test input validation rules",
               priority: "medium",
             },
           ],
@@ -341,14 +341,13 @@ describe("generateReport", () => {
           coverage_assessment: "Current test coverage is at 65%.",
           gaps: [
             {
-              area: "Error handling",
+              id: "G001",
               description: "No tests for network timeout scenarios",
               severity: "high",
             },
           ],
           recommendations: [
             {
-              title: "Add timeout tests",
               description: "Create tests for network timeout scenarios",
               priority: "high",
             },
@@ -371,15 +370,11 @@ describe("generateReport", () => {
       expect(report).toContain("## Test Analysis");
       expect(report).toContain("Current test coverage is at 65%.");
       expect(report).toContain("### Gaps");
-      expect(report).toContain("| Area | Description | Severity |");
-      expect(report).toContain(
-        "| Error handling | No tests for network timeout scenarios | high |",
-      );
+      expect(report).toContain("| ID | Description | Severity |");
+      expect(report).toContain("| G001 | No tests for network timeout scenarios | high |");
       expect(report).toContain("### Recommendations");
-      expect(report).toContain("| Title | Description | Priority |");
-      expect(report).toContain(
-        "| Add timeout tests | Create tests for network timeout scenarios | high |",
-      );
+      expect(report).toContain("| Description | Priority |");
+      expect(report).toContain("| Create tests for network timeout scenarios | high |");
     });
   });
 
@@ -393,13 +388,13 @@ describe("generateReport", () => {
               name: "Login Suite",
               test_cases: [
                 {
-                  name: "Valid login",
+                  title: "Valid login",
                   preconditions: "User exists in database",
                   steps: ["Navigate to login page", "Enter credentials", "Click submit"],
                   expected_result: "User is redirected to dashboard",
                 },
                 {
-                  name: "Invalid password",
+                  title: "Invalid password",
                   preconditions: "User exists in database",
                   steps: ["Navigate to login page", "Enter wrong password", "Click submit"],
                   expected_result: "Error message is displayed",
